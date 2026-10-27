@@ -1,0 +1,17 @@
+<testsuites name="results">
+  <testsuite name="all" package="all">
+    <property name="random_seed" value="1793135396" />
+    <testcase name="test_reset_sends_stop" classname="test_holy_dshot" file="/home/deos/hu.babin-riby/.local/lib/python3.10/site-packages/cocotb/decorators.py" lineno="219" time="0.6362292766571045" sim_time_ns="359201.001" ratio_time="564577.9189655103" />
+    <testcase name="test_throttle_frames" classname="test_holy_dshot" file="/home/deos/hu.babin-riby/.local/lib/python3.10/site-packages/cocotb/decorators.py" lineno="231" time="0.624445915222168" sim_time_ns="359641.001" ratio_time="575936.1895610213" />
+    <testcase name="test_hard_stop" classname="test_holy_dshot" file="/home/deos/hu.babin-riby/.local/lib/python3.10/site-packages/cocotb/decorators.py" lineno="247" time="1.694976568222046" sim_time_ns="956841.001" ratio_time="564515.7690903557" />
+    <testcase name="test_commands_blocked" classname="test_holy_dshot" file="/home/deos/hu.babin-riby/.local/lib/python3.10/site-packages/cocotb/decorators.py" lineno="264" time="0.5270662307739258" sim_time_ns="299801.00099999993" ratio_time="568810.8694798802" />
+    <testcase name="test_soft_reset" classname="test_holy_dshot" file="/home/deos/hu.babin-riby/.local/lib/python3.10/site-packages/cocotb/decorators.py" lineno="278" time="1.0466067790985107" sim_time_ns="598521.0009999999" ratio_time="571868.0720905829" />
+    <testcase name="test_axi_access" classname="test_holy_dshot" file="/home/deos/hu.babin-riby/.local/lib/python3.10/site-packages/cocotb/decorators.py" lineno="294" time="0.00429844856262207" sim_time_ns="1241.001000000164" ratio_time="288709.0497700753" />
+    <testcase name="test_random" classname="test_holy_dshot" file="/home/deos/hu.babin-riby/.local/lib/python3.10/site-packages/cocotb/decorators.py" lineno="310" time="9.171162605285645" sim_time_ns="5148601.001" ratio_time="561390.2209118712" />
+    <testcase name="test_enable_starts_stopped" classname="test_holy_dshot" file="/home/deos/hu.babin-riby/.local/lib/python3.10/site-packages/cocotb/decorators.py" lineno="339" time="32.360984086990356" sim_time_ns="18107721.001000002" ratio_time="559554.0899598168" />
+    <testcase name="test_edge_throttles" classname="test_holy_dshot" file="/home/deos/hu.babin-riby/.local/lib/python3.10/site-packages/cocotb/decorators.py" lineno="350" time="1.7265613079071045" sim_time_ns="957801.0009999983" ratio_time="554744.8541870902" />
+    <testcase name="test_change_mid_frame" classname="test_holy_dshot" file="/home/deos/hu.babin-riby/.local/lib/python3.10/site-packages/cocotb/decorators.py" lineno="366" time="0.6949598789215088" sim_time_ns="388961.001000002" ratio_time="559688.4263356628" />
+    <testcase name="test_reset_in_each_state" classname="test_holy_dshot" file="/home/deos/hu.babin-riby/.local/lib/python3.10/site-packages/cocotb/decorators.py" lineno="387" time="4.105512857437134" sim_time_ns="2216721.0009999983" ratio_time="539937.6589417835" />
+    <testcase name="test_rewrite_enable_and_soft_reset_bit" classname="test_holy_dshot" file="/home/deos/hu.babin-riby/.local/lib/python3.10/site-packages/cocotb/decorators.py" lineno="418" time="1.110844373703003" sim_time_ns="598441.0009999983" ratio_time="538726.2294943201" />
+  </testsuite>
+</testsuites>
