@@ -1,10 +1,11 @@
 # HOLY DSHOT – 4-channel DShot300 ESC output
 
-An AXI4-Lite peripheral that sends DShot300 to four ESCs (AM32). You write a throttle
-per motor into a register, and the IP sends it continuously. No commit, no
-telemetry, no closed loop.
+> [!DANGER]
+> This repo was heavily vibe coded
 
-## Use it
+An AXI4-Lite peripheral that sends DShot300 throttle to four ESCs (AM32).
+
+## USER GUIDE
 
 Registers (base address + offset, 32-bit, word aligned):
 
@@ -16,7 +17,7 @@ Registers (base address + offset, 32-bit, word aligned):
 | `0x0C` | `THROTTLE2` | RW | `0` | `[10:0]` throttle, channel 2 |
 | `0x10` | `THROTTLE3` | RW | `0` | `[10:0]` throttle, channel 3 |
 
-Throttle values:
+**Throttle values:**
 
 | Value | Output |
 |---|---|
@@ -24,7 +25,7 @@ Throttle values:
 | 1–47 | stop (DShot commands are blocked) |
 | 48–2047 | throttle, 48 = minimum, 2047 = maximum |
 
-Typical sequence:
+**Typical sequence:**
 
 ```
 CTRL = 1                      enable: all channels send stop, throttles are cleared
@@ -36,7 +37,8 @@ CTRL = 1                      enable again: starts at stop, write throttles agai
 CTRL = 2                      soft reset: registers and EN cleared, stop frames
 ```
 
-Other behaviour:
+**Other behaviour:**
+
 - Writes with `wstrb != 0xF` return SLVERR and change nothing.
 - Unmapped addresses: reads return 0, writes are ignored (both OKAY).
 - Reads have no side effects.
