@@ -1,5 +1,6 @@
 # HOLY DSHOT - 4-channel DShot ESC controller
 
+> [!WARNING]
 > WARNING : This repo has been vibe coded
 
 HOLY DSHOT is an AXI4-Lite peripheral that drives four ESCs (AM32 firmware) with
