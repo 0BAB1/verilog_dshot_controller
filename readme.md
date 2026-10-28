@@ -57,6 +57,22 @@ CTRL = 2                      soft reset: registers and EN cleared, stop frames
   reset (`rst_n`) drops the lines low at once, so a frame in flight can leave one short
   pulse (a runt). ESCs ignore runts, and the next frames are complete.
 
+## Project structure
+
+```
+dshot_controller/
+├── requirements.md          specification
+├── readme.md                usage, register map, behaviour
+├── STRUCTURE.md             this page
+├── src/
+│   ├── holy_dshot.sv        the core: AXI4-Lite slave, registers, frame engine
+│   └── holy_dshot_wrapper.v plain Verilog wrapper for Vivado (no logic)
+└── tb/
+    ├── Makefile             cocotb + Verilator run
+    ├── requirements.txt     cocotb 1.9.2
+    └── test_holy_dshot.py   all tests (core and wrapper)
+```
+
 ## How it works
 
 Each channel sends a 16-bit frame every 18 bit times (about 60 µs at 25 MHz). The frame
