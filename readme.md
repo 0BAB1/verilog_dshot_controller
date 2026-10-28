@@ -1,6 +1,6 @@
 # HOLY DSHOT – 4-channel DShot300 ESC output
 
-> [!DANGER]
+> [!IMPORTANT]
 > This repo was heavily vibe coded
 
 An AXI4-Lite peripheral that sends DShot300 throttle to four ESCs (AM32).
@@ -42,6 +42,10 @@ CTRL = 2                      soft reset: registers and EN cleared, stop frames
 - Writes with `wstrb != 0xF` return SLVERR and change nothing.
 - Unmapped addresses: reads return 0, writes are ignored (both OKAY).
 - Reads have no side effects.
+
+**FPGA SoC Implementation**
+
+Implented on a Spartan7-50 based SoC w/ a softcore. Closed timing without problem at 25MHz.
 
 ## Safety
 
@@ -114,4 +118,3 @@ frequency.
 - No watchdog. If software stops writing, the motors keep the last throttle. Add a
   timeout in software, or ask for a hardware watchdog.
 - No ESC feedback. A missing ESC cannot be detected.
-- Timing closure on the Spartan-7 is not checked here. Run Vivado synthesis.
