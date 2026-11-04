@@ -53,7 +53,7 @@ Implented on a Spartan7-50 based SoC w/ a softcore. Closed timing without proble
   stop frame (throttle 0). The ESCs stay armed and stopped, and never see a missing signal.
 - **No commands.** Throttles 1–47 are never sent, so a wrong value cannot trigger an
   ESC command.
-- **Hard stop.** `CTRL.EN = 0` takes effect on the next frame, within about 60 µs.
+- **Hard stop.** `CTRL.EN = 0` takes effect on the next frame, within 500 µs.
 - **Enable starts stopped.** Every enable (EN 0→1) clears the throttle registers, so a
   stale value cannot spin a motor. Write the throttles after enabling.
 - **Reset is safe.** Reset and soft reset both clear the registers to 0 and disable
@@ -79,7 +79,7 @@ dshot_controller/
 
 ## How it works
 
-Each channel sends a 16-bit frame every 18 bit times (about 60 µs at 25 MHz). The frame
+Each channel sends a 16-bit frame every 500 µs (2 kHz at any CLK_HZ). The frame itself is 18 bit times (about 60 µs at 25 MHz), then the line stays low until the next frame. The frame
 has the throttle, telemetry bit 0, and a 4-bit CRC (`crc = v[3:0]^v[7:4]^v[11:8]`).
 All four channels share one bit counter, so their frames start on the same cycle.
 

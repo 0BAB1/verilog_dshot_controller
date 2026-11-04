@@ -55,6 +55,9 @@ module holy_dshot #(
     localparam logic [15:0] T1H   = 16'((3 * T_BIT + 2) / 4);
     localparam logic [15:0] T0H   = 16'((3 * T_BIT + 4) / 8);
     localparam logic [4:0]  SLOTS = 5'd18;       // 16 data bits + 2 idle bit times
+    // Frame period: 2 kHz. The frame is 18 bit times; the rest of the period is idle
+    // (line low). Must stay above 18 * T_BIT (true for any CLK_HZ up to ~130 MHz).
+    localparam logic [15:0] FRAME_T = 16'((CLK_HZ + 1_000) / 2_000);
 
     // Register addresses (byte addresses)
     localparam logic [15:0] A_CTRL = 16'h0000;   // bit 0 EN, bit 1 SOFT_RESET (W1S)
@@ -84,8 +87,9 @@ module holy_dshot #(
     // -------------------------------------------------------------------------
     // Frame engine
     // -------------------------------------------------------------------------
+    logic [15:0] fcyc_q;               // clock cycle inside the frame period (0..FRAME_T-1)
     logic [15:0] cyc_q;                // clock cycle inside the current bit
-    logic [4:0]  slot_q;               // bit slot 0..17 inside the frame
+    logic [4:0]  slot_q;               // bit slot 0..17 inside the frame (17 = last, then idle)
     logic [15:0] shift_q [4];          // frame being sent, MSB = current bit
     logic [3:0]  dshot_q;              // registered output
     logic [3:0]  dshot_d;              // next output
@@ -100,26 +104,33 @@ module holy_dshot #(
 
     always_ff @(posedge clk) begin
         if (!rst_n) begin
-            cyc_q  <= 16'd0;
-            slot_q <= 5'd0;
+            fcyc_q  <= 16'd0;
+            cyc_q   <= 16'd0;
+            slot_q  <= 5'd0;
             for (int ch = 0; ch < 4; ch++) shift_q[ch] <= 16'd0;   // stop frame
             dshot_q <= 4'd0;
         end else begin
             dshot_q <= dshot_d;
-            if (cyc_q == T_BIT - 16'd1) begin
-                cyc_q <= 16'd0;
-                if (slot_q == SLOTS - 5'd1) begin
-                    // Frame boundary: load the next frame from the registers
-                    slot_q <= 5'd0;
-                    for (int ch = 0; ch < 4; ch++)
-                        shift_q[ch] <= dshot_frame(en_q, thr_q[ch]);
-                end else begin
-                    slot_q <= slot_q + 5'd1;
-                    for (int ch = 0; ch < 4; ch++)
-                        shift_q[ch] <= shift_q[ch] << 1;
-                end
+            if (fcyc_q == FRAME_T - 16'd1) begin
+                // Frame start: load the frame from the registers, restart the bit counters
+                fcyc_q <= 16'd0;
+                cyc_q  <= 16'd0;
+                slot_q <= 5'd0;
+                for (int ch = 0; ch < 4; ch++)
+                    shift_q[ch] <= dshot_frame(en_q, thr_q[ch]);
             end else begin
-                cyc_q <= cyc_q + 16'd1;
+                fcyc_q <= fcyc_q + 16'd1;
+                if (cyc_q == T_BIT - 16'd1) begin
+                    cyc_q <= 16'd0;
+                    // Slot 17 is the last one. After it the line stays low until the frame start.
+                    if (slot_q != SLOTS - 5'd1) begin
+                        slot_q <= slot_q + 5'd1;
+                        for (int ch = 0; ch < 4; ch++)
+                            shift_q[ch] <= shift_q[ch] << 1;
+                    end
+                end else begin
+                    cyc_q <= cyc_q + 16'd1;
+                end
             end
         end
     end

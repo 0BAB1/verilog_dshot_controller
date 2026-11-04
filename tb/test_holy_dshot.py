@@ -17,7 +17,8 @@ CLK_HZ = int(os.environ.get("CLK_HZ", "25000000"))
 T = (CLK_HZ + 150_000) // 300_000          # bit period, cycles
 T1H = (3 * T + 2) // 4
 T0H = (3 * T + 4) // 8
-FRAME = 18 * T                              # 16 bits + 2 idle bit times
+FRAME = (CLK_HZ + 1000) // 2000             # frame period: 2 kHz (RTL FRAME_T)
+DATA = 16 * T                               # the 16 data bits at the start of a frame
 
 # Register map
 A_CTRL = 0x0000
@@ -80,6 +81,19 @@ class Bench:
         for _ in range(n):
             await RisingEdge(self.clk)
         await Timer(1, units="ns")
+
+    async def into_frame(self, offset):
+        """Wait for the next frame start on channel 0, then `offset` cycles more (inside the data bits)."""
+        await ReadOnly()
+        prev = int(self.dut.dshot_o.value) & 1
+        while True:
+            await RisingEdge(self.clk)
+            await ReadOnly()
+            bit = int(self.dut.dshot_o.value) & 1
+            if bit and not prev:
+                break
+            prev = bit
+        await self.wait(offset)
 
     async def _accept(self, valid, ready, what):
         """valid is high: return after the rising edge where the handshake happens."""
@@ -307,7 +321,7 @@ async def test_axi_access(dut):
 
 
 # -----------------------------------------------------------------------------
-@cocotb.test(timeout_time=60, timeout_unit="ms")
+@cocotb.test(timeout_time=150, timeout_unit="ms")
 async def test_random(dut):
     """Random writes, enable toggles, soft resets and waits. Every frame is stop or a value written."""
     b = await start(dut)
@@ -336,13 +350,13 @@ async def test_random(dut):
 # -----------------------------------------------------------------------------
 # AM32-oriented tests
 # -----------------------------------------------------------------------------
-@cocotb.test(timeout_time=20, timeout_unit="ms")
+@cocotb.test(timeout_time=40, timeout_unit="ms")
 async def test_enable_starts_stopped(dut):
     """AM32 arms on stop frames. A stale throttle must not spin the motor on enable."""
     b = await start(dut)
     await b.wr(A_THR[1], 500)                 # written while disabled
     await b.wr(A_CTRL, 1)
-    for ch, vals in enumerate(await b.frames(300)):
+    for ch, vals in enumerate(await b.frames(20)):
         assert set(vals) == {0}, f"channel {ch} spun up from a stale value"
 
 
@@ -372,7 +386,7 @@ async def test_change_mid_frame(dut):
     await b.wr(A_THR[0], old)
     await b.wait(2 * FRAME)                    # old value settled
     t0 = b.cycle
-    await b.wait(FRAME + FRAME // 2)           # the write lands inside a frame
+    await b.into_frame(5 * T)                  # the write lands inside the data bits
     await b.wr(A_THR[0], new)
     await b.wait(3 * FRAME)
     seq = [f[1] for f in decode(b.pulses[0]) if f[0] >= t0]
@@ -398,7 +412,7 @@ async def test_reset_in_each_state(dut):
             await b.wr(A_THR[0], 700)
             await b.wr(A_THR[1], 900)
             if state == "mid_frame":
-                await b.wait(FRAME // 2 + 7)   # reset lands inside a frame
+                await b.into_frame(5 * T + 7)  # reset lands inside a frame
 
     for state in ("disabled", "running", "mid_frame"):
         for kind in ("soft", "hard"):
@@ -412,6 +426,26 @@ async def test_reset_in_each_state(dut):
                 assert await b.rd(addr) == 0, f"{state}/{kind}: throttle not cleared"
             for ch, vals in enumerate(await b.frames(3)):
                 assert set(vals) == {0}, f"{state}/{kind}: channel {ch} not stopped"
+
+
+# -----------------------------------------------------------------------------
+MAX_FRAME_HZ = 2_000
+
+
+@cocotb.test(timeout_time=20, timeout_unit="ms")
+async def test_frame_rate(dut):
+    """Frame-to-frame period on channel 0 must not exceed 2 kHz."""
+    b = await start(dut)
+    await b.wr(A_CTRL, 1)
+    await b.wait(6 * FRAME)
+    starts = [s for s, _ in decode(b.pulses[0], b.reset_cycle)]
+    assert len(starts) >= 5, f"only {len(starts)} frames"
+    for s0, s1 in zip(starts, starts[1:]):
+        period = s1 - s0
+        freq = CLK_HZ / period
+        assert freq <= MAX_FRAME_HZ, (
+            f"frame rate {freq / 1000:.2f} kHz (period {period} cycles) "
+            f"is above {MAX_FRAME_HZ / 1000:.0f} kHz")
 
 
 # -----------------------------------------------------------------------------

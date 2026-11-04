@@ -48,7 +48,7 @@ uint32_t thr = (p == 0) ? 0 : 48 + (p * 1999) / 1000;
 2. Wait for the ESCs to arm. AM32 arms after it has received stop frames for a while.
    The exact time depends on the ESC firmware. Measure it on your ESC.
 3. Write the throttles: `THROTTLE0..3 = value`.
-   Each new value applies to the next frame of its motor (about 60 µs later).
+   Each new value applies to the next frame of its motor (within 500 µs).
 
 Do not write throttles before step 1. Enable clears them, so an earlier write is lost.
 Do not skip step 2. Writing a throttle before arming can make the ESC ignore the signal.
@@ -64,7 +64,7 @@ Either:
 
 - **Set throttles to 0** (soft stop). Motors stop, the IP keeps running, ESCs stay armed.
 - **Write `CTRL = 0`** (hard stop). Every channel sends stop frames within one frame
-  (about 60 µs). Throttle registers keep their values.
+  (within 500 µs). Throttle registers keep their values.
 
 Use `CTRL = 0` for emergencies. To run again, write `CTRL = 1`, wait for arming, then
 write the throttles again (enable cleared them).
@@ -114,7 +114,7 @@ There is no status register, no interrupt and no fault flag.
 ## 6. Timing
 
 - DShot300 at `CLK_HZ` (default 25 MHz). Bit period 83 cycles, `1` high 62, `0` high 31.
-- Each channel sends one 16-bit frame every 18 bit times, about 60 µs (about 16.7 kHz).
+- Each channel sends one 16-bit frame every 500 µs (2 kHz). The frame itself is 18 bit times (about 60 µs); the rest is idle, line low.
 - All four channels start their frames on the same clock cycle.
 - Frame format: throttle (11 bits), telemetry bit (always 0), CRC (4 bits).
 - Set `CLK_HZ` to the real `aclk` frequency. The timing is computed from it.
